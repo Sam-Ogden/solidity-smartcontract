@@ -61,3 +61,12 @@ contract SandwichFactory {
 
 ## Interacting with other contracts
 - Define an interface (still using contract keyword) with the required functions from the contract you want to interact with (e.g. KittyInterface)
+
+### Using another contract
+contract NumberInterface {
+  function getNum(address _myAddress) public view returns (uint);
+}
+
+address NumberInterfaceAddress = 0xab38... 
+// ^ The address of the FavoriteNumber contract on Ethereum
+NumberInterface numberContract = NumberInterface(NumberInterfaceAddress);
