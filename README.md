@@ -70,3 +70,27 @@ contract NumberInterface {
 address NumberInterfaceAddress = 0xab38... 
 // ^ The address of the FavoriteNumber contract on Ethereum
 NumberInterface numberContract = NumberInterface(NumberInterfaceAddress);
+
+## Lesson 3
+- after you deploy a contract to Ethereum, it’s immutable, which means that it can never be modified or updated again.
+- Extenal dependencies like the Cryptokitty address might change over time as changes are made and new contracts deployed, could use a setKittyContractAddress to update out contract without needed to deploy a new version
+- We can make contracts Ownable — meaning the owner can have special privileges.
+- Contracts have a `constructor` with same name as contract, these get called 1 time when it is first created
+- Function modifiers
+```
+  modifier onlyOwner() {
+    require(isOwner());
+    _;
+  }
+
+  function transferOwnership(address newOwner) public onlyOwner {...}
+
+```
+
+## Gas
+Users have to pay every time they execute a function on your DApp using a currency called gas. Amount of gas depends on amount of resources required to execute it.
+
+### Saving Gas
+Normally there's no benefit to using these sub-types because Solidity reserves 256 bits of storage regardless of the uint size. For example, using uint8 instead of uint (uint256) won't save you any gas.
+
+But there's an exception to this: inside structs where you'll want to use the smallest integer sub-types you can get away with.
