@@ -94,3 +94,10 @@ Users have to pay every time they execute a function on your DApp using a curren
 Normally there's no benefit to using these sub-types because Solidity reserves 256 bits of storage regardless of the uint size. For example, using uint8 instead of uint (uint256) won't save you any gas.
 
 But there's an exception to this: inside structs where you'll want to use the smallest integer sub-types you can get away with.
+
+> view functions don't cost any gas when they're called externally by a user.
+> This is because view functions don't actually change anything on the blockchain – they only read the data. So marking a function with view tells web3.js that it only needs to query your local Ethereum node to run the function, and it doesn't actually have to create a transaction on the blockchain (which would need to be run on every single node, and cost gas).
+
+> Note: If a view function is called internally from another function in the same contract that is not a view function, it will still cost gas. This is because the other function creates a transaction on Ethereum, and will still need to be verified from every node. So view functions are only free when they're called externally.
+
+
