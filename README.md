@@ -111,3 +111,33 @@ In most programming languages, looping over large data sets is expensive. But in
 
 ### Memory arrays
 You can use the memory keyword with arrays to create a new array inside a function without needing to write anything to storage. Memory arrays must be created with a length argument (in this example, 3). They currently cannot be resized like storage arrays can with array.push()
+
+
+## Payable Modifier
+`payable` functions are a special type of function that can receive Ether
+
+```
+  function buySomething() external payable {
+    require(msg.value == 0.001 ether);
+    transferThing(msg.sender);
+  }
+
+  // From web3js
+  OnlineStore.buySomething({from: web3.eth.defaultAccount, value: web3.utils.toWei(0.001)})
+```
+
+>If a function is not marked payable and you try to send Ether to it as above, the function will reject your transaction.
+
+After you send Ether to a contract, it gets stored in the contract's Ethereum account, and it will be trapped there — unless you add a function to withdraw the Ether from the contract.
+
+```
+contract GetPaid is Ownable {
+  function withdraw() external onlyOwner {
+    address payable _owner = address(uint160(owner()));
+    _owner.transfer(address(this).balance); 
+  }
+}
+```
+- `address(this).balance` returns balance on the contract
+
+>It is important to note that you cannot transfer Ether to an address unless that address is of type address payable. But the _owner variable is of type uint160, meaning that we must explicitly cast it to address payable.
