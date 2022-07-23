@@ -13,7 +13,8 @@ https://cryptozombies.io/en/course
 - Hash function: `keccak256` with `abi.encodePacked`
 - Maps: `mapping (address => uint) ownerZombieCount;`
 - `require` is a function that ensures some condition is met, if it fails then the function exits
-- Inheritence: `contract ZombieFeeding is ZombieFactory {}`
+- Inheritence: `contract ZombieFeeding is ZombieFactory, ERC721 {}`
+- Commenting your code and the natspec standard
 
 ## Storage
 In Solidity, there are two locations you can store variables — in `storage` (on the blockchain) and in `memory` (temporary, and erased between external calls to the contract)
@@ -161,3 +162,61 @@ Let's say we had a coin flip contract — heads you double your money, tails you
 If I were running a node, I could publish a transaction only to my own node and not share it. I could then run the coin flip function to see if I won — and if I lost, choose not to include that transaction in the next block I'm solving. I could keep doing this indefinitely until I finally won the coin flip and solved the next block, and profit.
 
 https://ethereum.stackexchange.com/questions/191/how-can-i-securely-generate-a-random-number-in-my-smart-contract
+
+# Tokens
+A token on Ethereum is basically just a smart contract that follows some common rules
+
+`ERC20` tokens act like currencies and are interchangable
+
+`ERC721` tokens are not interchangeable since each one is assumed to be unique, and are not divisible. You can only trade them in whole units, and each one has a unique ID
+
+```
+contract ERC721 {
+  event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+  event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
+
+  function balanceOf(address _owner) external view returns (uint256);
+  function ownerOf(uint256 _tokenId) external view returns (address);
+  function transferFrom(address _from, address _to, uint256 _tokenId) external payable;
+  function approve(address _approved, uint256 _tokenId) external payable;
+}
+```
+
+
+## Contract security enhancements: Overflows and Underflows
+```
+uint8 number = 255;
+number++; // overflows to 0
+
+uint8 number = 0;
+number--; // overflows to 255
+```
+
+### OpenZepplin SafeMath library
+- A library is a special type of contract in Solidity. One of the things it is useful for is to attach functions to native data types.
+```
+library SafeMath {
+  function add(uint256 a, uint256 b) internal pure returns (uint256) {
+    uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+  // ...
+}
+```
+
+- Even though the function calls for 2 args, the uint we call the function on is automatically passed in as the first argument.
+```
+contract ZombieFactory is Ownable {
+
+  using SafeMath for uint256;
+  ...
+}
+  // Usage ex.
+  uint256 a = 5;
+  uint256 b = a.add(3); // 5 + 3 = 8
+  uint256 c = a.mul(2); // 5 * 2 = 10
+```
+
+### Assert vs Require
+assert is similar to require, where it will throw an error if false. The difference between assert and require is that require will refund the user the rest of their gas when a function fails, whereas assert will not. 
