@@ -1,7 +1,7 @@
 Solidity Path: Beginner to Intermediate Smart Contracts - Crypto Zombies Course
 
 https://cryptozombies.io/en/course
-
+- A `wei` is the smallest sub-unit of Ether — there are 10^18 wei in one ether.
 - Define a contract `contract ZombieFactory {}`
 - Functions are `internal`, `exteral`, `private` or `public`, public by default
   - private: only called within this contract (not externally, or by inheriting contracts)
@@ -272,6 +272,20 @@ window.addEventListener('load', function() {
 })
 ```
 
+- Metamask allows users to manage multiple accounts
+- use `var userAccount = web3.eth.accounts[0]` to get currently active one
+- account may change over time, so we need to keep checking the currently active account;
+```
+var accountInterval = setInterval(function() {
+  // Check if account has changed
+  if (web3.eth.accounts[0] !== userAccount) {
+    userAccount = web3.eth.accounts[0];
+    // Call some function to update the UI with the new account
+    updateInterface();
+  }
+}, 100);
+```
+
 ## Talking to Contracts
 - Need: Contract address and contract ABI
 - After you deploy your contract, it gets a fixed address on Ethereum where it will live forever.
@@ -282,3 +296,78 @@ window.addEventListener('load', function() {
 `myContract.methods.myMethod(123).call()`
 
 - `send` *will create a transaction and change data on the blockchain*. You'll need to use send for any functions that aren't view or pure. Requires gas and transaction signed by metamask `myContract.methods.myMethod(123).send()`
+
+- when you declare a variable public, it automatically creates a public "getter" function with the same name
+
+### Send
+- sending a transaction requires a from address of who's calling the function (which becomes msg.sender in your Solidity code). We'll want this to be the user of our DApp, so MetaMask will pop up to prompt them to sign the transaction.
+
+- sending a transaction costs gas
+
+There will be a significant delay from when the user sends a transaction and when that transaction actually takes effect on the blockchain. This is because we have to wait for the transaction to be included in a block, and the block time for Ethereum is on average 15 seconds. If there are a lot of pending transactions on Ethereum or if the user sends too low of a gas price, our transaction may have to wait several blocks to get included, and this could take minutes.
+
+Example send:
+```
+function createRandomZombie(name) {
+  // This is going to take a while, so update the UI to let the user know
+  // the transaction has been sent
+  $("#txStatus").text("Creating new zombie on the blockchain. This may take a while...");
+  // Send the tx to our contract:
+  return cryptoZombies.methods.createRandomZombie(name)
+  .send({ from: userAccount })
+  .on("receipt", function(receipt) { // "receipt" fires when transaction was accepted onto chain
+    $("#txStatus").text("Successfully created " + name + "!");
+    // Transaction was accepted into the blockchain, let's redraw the UI
+    getZombiesByOwner(userAccount).then(displayZombies);
+  })
+  .on("error", function(error) { // error will fire if there's an issue that prevented the transaction from being included in a block, such as the user not sending enough gas.
+    // Do something to alert the user their transaction has failed
+    $("#txStatus").text(error);
+  });
+}
+```
+
+> Note: You can optionally specify gas and gasPrice when you call send, e.g. .send({ from: userAccount, gas: 3000000 }). If you don't specify this, MetaMask will let the user choose these values.
+
+
+### Web3 Utils Convert eth to wei
+`web3js.utils.toWei("1");`
+
+## Subscribing to events
+```
+cryptoZombies.events.NewZombie()
+.on("data", function(event) { ... })
+.on("error", console.error);
+```
+
+Note the above would trigger an alert every time ANY zombie was created in our DApp — not just for the current user. What if we only wanted alerts for the current user? We need `indexed`
+
+### Using indexed
+In order to filter events and only listen for changes related to the current user, our Solidity contract would have to use the indexed keyword, like we did in the Transfer event of our ERC721 implementation:
+
+`event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);`
+
+because _from and _to are indexed, that means we can filter for them in our event listener in our front end:
+
+```
+// Use `filter` to only fire this code when `_to` equals `userAccount`
+
+cryptoZombies.events.Transfer({ filter: { _to: userAccount } })
+
+.on("data", function(event) {
+  let data = event.returnValues;
+  // The current user just received a zombie!
+  // Do something here to update the UI to show it
+}).on("error", console.error);
+```
+
+### Querying Past events
+We can even query past events using getPastEvents, and use the filters fromBlock and toBlock to give Solidity a time range for the event logs ("block" in this case referring to the Ethereum block number):
+```
+cryptoZombies.getPastEvents("NewZombie", { fromBlock: 0, toBlock: "latest" })
+.then(function(events) {
+  // `events` is an array of `event` objects that we can iterate, like we did above
+  // This code will get us a list of every zombie that was ever created
+});
+
+```
