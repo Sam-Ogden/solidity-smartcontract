@@ -220,3 +220,65 @@ contract ZombieFactory is Ownable {
 
 ### Assert vs Require
 assert is similar to require, where it will throw an error if false. The difference between assert and require is that require will refund the user the rest of their gas when a function fails, whereas assert will not. 
+
+
+# Web3.js
+Ethereum network is made up of nodes, with each containing a copy of the blockchain. When you want to call a function on a smart contract, you need to query one of these nodes and tell it:
+
+The address of the smart contract
+The function you want to call, and
+The variables you want to pass to that function.
+
+Ethereum nodes only speak a language called JSON-RPC
+
+Example:
+CryptoZombies.methods.createRandomZombie("Vitalik Nakamoto 🤔")
+  .send({ from: "0xb60e8dd61c5d32be8058bb8eb970870f07233155", gas: "3000000" })
+
+Remember, Ethereum is made up of nodes that all share a copy of the same data. Setting a Web3 Provider in Web3.js tells our code which node we should be talking to handle our reads and writes. It's kind of like setting the URL of the remote web server for your API calls in a traditional web app.
+
+You could host your own Ethereum node as a provider.
+
+## Infura
+A third-party service that makes your life easier so you don't need to maintain your own Ethereum node in order to provide a DApp for your users
+
+Infura is a service that maintains a set of Ethereum nodes with a caching layer for fast reads, which you can access for free through their API.
+
+`var web3 = new Web3(new Web3.providers.WebsocketProvider("wss://mainnet.infura.io/ws"));`
+
+## Metamask
+Metamask is a browser extension for Chrome and Firefox that lets users securely manage their Ethereum accounts and private keys, and use these accounts to interact with websites that are using Web3.js.
+
+Metamask uses Infura's servers under the hood as a web3 provider
+
+Metamask injects their web3 provider into the browser in the global JavaScript object web3. So your app can check to see if web3 exists, and if it does use web3.currentProvider as its provider.
+
+```
+window.addEventListener('load', function() {
+
+  // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+  if (typeof web3 !== 'undefined') {
+    // Use Mist/MetaMask's provider
+    web3js = new Web3(web3.currentProvider);
+  } else {
+    // Handle the case where the user doesn't have web3. Probably
+    // show them a message telling them to install Metamask in
+    // order to use our app.
+  }
+
+  // Now you can start your app & access web3js freely:
+  startApp()
+
+})
+```
+
+## Talking to Contracts
+- Need: Contract address and contract ABI
+- After you deploy your contract, it gets a fixed address on Ethereum where it will live forever.
+- `ABI` stands for `Application Binary Interface`. Basically it's a representation of your contracts' methods in JSON format that tells Web3.js how to format function calls in a way your contract will understand. Provided by the compiler before deploying.
+
+## Calling Contract Functions: Call & Send
+- `call` is used for `view` and `pure` functions. It only runs on the local node, and *won't create a transaction on the blockchain*. They also dont cost any gas & user wont be required to sign a transaction with metamask
+`myContract.methods.myMethod(123).call()`
+
+- `send` *will create a transaction and change data on the blockchain*. You'll need to use send for any functions that aren't view or pure. Requires gas and transaction signed by metamask `myContract.methods.myMethod(123).send()`
