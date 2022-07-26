@@ -72,6 +72,8 @@ address NumberInterfaceAddress = 0xab38...
 // ^ The address of the FavoriteNumber contract on Ethereum
 NumberInterface numberContract = NumberInterface(NumberInterfaceAddress);
 
+We can either get this directly from GitHub, or from NPM packages. The framework you're using (like Truffle, Brownie, Remix, Hardhat) will determine whether or not to use GitHub or NPM packages.
+
 ## Lesson 3
 - after you deploy a contract to Ethereum, it’s immutable, which means that it can never be modified or updated again.
 - Extenal dependencies like the Cryptokitty address might change over time as changes are made and new contracts deployed, could use a setKittyContractAddress to update out contract without needed to deploy a new version
@@ -369,5 +371,15 @@ cryptoZombies.getPastEvents("NewZombie", { fromBlock: 0, toBlock: "latest" })
   // `events` is an array of `event` objects that we can iterate, like we did above
   // This code will get us a list of every zombie that was ever created
 });
-
 ```
+
+Because you can use this method to query the event logs since the beginning of time, this presents an interesting use case: Using events as a cheaper form of storage.
+The tradeoff here is that events are not readable from inside the smart contract itself.
+
+
+# Chainlink: Decentralized Oracles
+- Defi app needs to access data external from the outside world, e.g. the price of eth
+- We need to get this data from decentralized oracle network (DON) and decentralized data sources.
+- Chainlink is a framework for decentralized oracle networks, and is a way to get data in from multiple sources across multiple oracles. This DON aggregates data in a decentralized manner and places it on the blockchain in a smart contract (often referred to as a "price reference feed" or "data feed") for us to read from
+- Using Chainlink Data Feeds is a way to cheaply, more accurately, and with more security gather data from the real world in this decentralized context. Since the data is coming from multiple sources, multiple people can partake in the ecosystem and it becomes even cheaper than running even a centralized oracle (https://data.chain.link/)
+- Lending protocols like Compound rely on this 
